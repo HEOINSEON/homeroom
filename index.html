@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>우리반 마음 출석부</title>
+    <style>
+        body {
+            font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 10;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #ecf0f1;
+        }
+        .form-group:last-of-type { border-bottom: none; }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #34495e;
+            font-size: 15px;
+        }
+        .label-desc {
+            font-size: 12px;
+            color: #95a5a6;
+            font-weight: normal;
+        }
+        
+        input[type="text"], input[type="number"], select, input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        /* 비밀번호 오류 시 스타일 */
+        input.error-input {
+            border-color: #e74c3c !important;
+            background-color: #fff5f5;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+            font-weight: bold;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .slider-container { display: flex; align-items: center; gap: 10px; }
+        input[type="range"] { flex-grow: 1; accent-color: #3498db; }
+        #temp-value { font-weight: bold; color: #3498db; width: 45px; text-align: right; }
+
+        .mood-options {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .mood-options input[type="radio"] { display: none; }
+        .mood-label {
+            font-size: 26px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 15px;
+            transition: all 0.2s;
+            filter: grayscale(100%);
+            text-align: center;
+        }
+        .mood-options input[type="radio"]:checked + .mood-label {
+            background-color: #f1f2f6;
+            transform: scale(1.15);
+            filter: grayscale(0%);
+        }
+
+        .action-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .action-options input[type="radio"] { display: none; }
+        .action-label {
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 13px;
+            cursor: pointer;
+            color: #495057;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+        }
+        .action-options input[type="radio"]:checked + .action-label {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+            font-weight: bold;
+        }
+
+        #custom-action-container {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .password-box {
+            background-color: #fff9db;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #fab005;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+        button:active { background-color: #2980b9; }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        
+        #loading { text-align: center; display: none; color: #7f8c8d; margin-top: 15px; font-weight: bold; }
+
+        /* 성공 팝업 스타일 */
+        #success-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            text-align: center;
+            z-index: 10000;
+            display: none;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #success-modal.show {
+            display: block;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        #success-modal h2 { color: #2ecc71; margin-bottom: 10px; }
+        #success-modal p { font-size: 18px; color: #34495e; line-height: 1.6; }
+        #success-modal .icon { font-size: 50px; margin-bottom: 20px; display: block; }
+        #success-modal .close-btn {
+            margin-top: 25px;
+            background: #2ecc71;
+            padding: 12px 30px;
+            font-size: 16px;
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<!-- 성공 메시지 팝업 -->
+<div id="success-modal">
+    <span class="icon">🎊</span>
+    <h2>출석 체크 완료!</h2>
+    <p id="welcome-msg">어서와, 친구!<br>오늘 하루도 정말 반가워요.</p>
+    <button class="close-btn" onclick="closeModal()">확인</button>
+</div>
+
+<div class="container">
+    <h1>🌱 마음 챙김 아침 출석부</h1>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <select id="student-id" style="flex: 1;" required>
+            <option value="" disabled selected>학번 선택</option>
+        </select>
+        <input type="text" id="student-name" placeholder="이름" style="flex: 1;" required>
+    </div>
+
+    <div class="form-group">
+        <label>1. 내 마음의 온도는? <span class="label-desc">(에너지 상태)</span></label>
+        <div class="slider-container">
+            <span>🧊 0℃</span>
+            <input type="range" id="mood-temp" min="0" max="100" value="50" oninput="document.getElementById('temp-value').innerText = this.value + '℃'">
+            <span>🔥 100℃</span>
+            <span id="temp-value">50℃</span>
+        </div>
+        
+        <div class="mood-options">
+            <input type="radio" id="mood-1" name="mood" value="기쁨 😄" checked>
+            <label for="mood-1" class="mood-label" title="기쁨">😄</label>
+            <input type="radio" id="mood-2" name="mood" value="평온 🙂">
+            <label for="mood-2" class="mood-label" title="평온">🙂</label>
+            <input type="radio" id="mood-3" name="mood" value="지침 🥱">
+            <label for="mood-3" class="mood-label" title="지침">🥱</label>
+            <input type="radio" id="mood-4" name="mood" value="우울 😢">
+            <label for="mood-4" class="mood-label" title="슬픔">😢</label>
+            <input type="radio" id="mood-5" name="mood" value="분노 😠">
+            <label for="mood-5" class="mood-label" title="분노">😠</label>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>2. 오늘의 다짐 <span class="label-desc">(정확히 5글자만!)</span></label>
+        <input type="text" id="resolution" maxlength="5" oninput="checkLength(this)" placeholder="예: 최선을다해" required>
+    </div>
+
+    <div class="form-group">
+        <label>3. 오늘 실천할 다정함 <span class="label-desc">(하나 선택)</span></label>
+        <div class="action-options">
+            <input type="radio" id="act-1" name="action" value="밝게 인사하기" checked onclick="toggleCustomAction(false)">
+            <label for="act-1" class="action-label">👋 밝게 인사하기</label>
+            
+            <input type="radio" id="act-2" name="action" value="고운 말 쓰기" onclick="toggleCustomAction(false)">
+            <label for="act-2" class="action-label">💬 고운 말 쓰기</label>
+            
+            <input type="radio" id="act-3" name="action" value="경청하기" onclick="toggleCustomAction(false)">
+            <label for="act-3" class="action-label">👂 경청하기</label>
+
+            <input type="radio" id="act-4" name="action" value="도와주기" onclick="toggleCustomAction(false)">
+            <label for="act-4" class="action-label">🤝 친구 도와주기</label>
+            
+            <input type="radio" id="act-etc" name="action" value="기타" onclick="toggleCustomAction(true)">
+            <label for="act-etc" class="action-label">✏️ 직접 적기(기타)</label>
+        </div>
+        <div id="custom-action-container">
+            <input type="text" id="custom-action" maxlength="15" placeholder="실천할 내용을 적어줘 (15자 이내)">
+        </div>
+    </div>
+
+    <div class="form-group password-box">
+        <label>🔑 오늘의 비밀번호 <span class="label-desc">(칠판을 확인하세요!)</span></label>
+        <input type="text" id="daily-password" placeholder="비밀번호 입력" required oninput="hideError()">
+        <div id="pw-error" class="error-message">⚠️ 비밀번호가 틀렸습니다. 다시 입력하세요!</div>
+    </div>
+
+    <button id="submit-btn" onclick="submitData()">출석 제출하기 🚀</button>
+    <div id="loading">데이터를 시트로 전송 중입니다... ⏳</div>
+</div>
+
+<script>
+    window.onload = function() {
+        const idSelect = document.getElementById('student-id');
+        for(let i = 21001; i <= 21033; i++) {
+            let option = document.createElement('option');
+            option.value = i;
+            option.text = i;
+            idSelect.appendChild(option);
+        }
+    };
+
+    function checkLength(obj) {
+        if (obj.value.length > 5) {
+            obj.value = obj.value.substring(0, 5);
+        }
+    }
+
+    function toggleCustomAction(show) {
+        const container = document.getElementById('custom-action-container');
+        container.style.display = show ? 'block' : 'none';
+        if (show) document.getElementById('custom-action').focus();
+    }
+
+    function hideError() {
+        const pwInput = document.getElementById('daily-password');
+        const errorMsg = document.getElementById('pw-error');
+        pwInput.classList.remove('error-input');
+        errorMsg.style.display = 'none';
+    }
+
+    function showSuccessModal(name) {
+        const modal = document.getElementById('success-modal');
+        const welcomeMsg = document.getElementById('welcome-msg');
+        welcomeMsg.innerHTML = `어서와, <b>${name}</b> 학생!<br>오늘도 즐거운 하루 보내세요! 💖`;
+        modal.classList.add('show');
+    }
+
+    function closeModal() {
+        document.getElementById('success-modal').classList.remove('show');
+        setTimeout(() => {
+            document.getElementById('success-modal').style.display = 'none';
+        }, 400);
+    }
+
+    // --- 폭죽 애니메이션 엔진 ---
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    let pieces = [];
+    let numberOfPieces = 150;
+    let animationId;
+
+    function updateCanvasSize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    function randomRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    function createPiece() {
+        return {
+            x: randomRange(0, canvas.width),
+            y: randomRange(-canvas.height, 0),
+            size: randomRange(8, 15),
+            color: `hsl(${randomRange(0, 360)}, 80%, 60%)`,
+            rotation: randomRange(0, 360),
+            speed: randomRange(4, 9),
+            oscillation: randomRange(0.02, 0.08),
+            angle: 0
+        };
+    }
+
+    function startConfetti() {
+        updateCanvasSize();
+        pieces = [];
+        for (let i = 0; i < numberOfPieces; i++) {
+            pieces.push(createPiece());
+        }
+        animateConfetti();
+        setTimeout(() => {
+            cancelAnimationFrame(animationId);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }, 5000);
+    }
+
+    function animateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+            p.y += p.speed;
+            p.angle += p.oscillation;
+            p.x += Math.sin(p.angle) * 3;
+            p.rotation += 5;
+
+            ctx.save();
+            ctx.fillStyle = p.color;
+            ctx.translate(p.x + p.size/2, p.y + p.size/2);
+            ctx.rotate(p.rotation * Math.PI / 180);
+            ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+            ctx.restore();
+
+            if (p.y > canvas.height) {
+                p.y = -p.size;
+                p.x = randomRange(0, canvas.width);
+            }
+        });
+        animationId = requestAnimationFrame(animateConfetti);
+    }
+
+    window.addEventListener('resize', updateCanvasSize);
+
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwPht0ADIQbAE278LN1m2CWUU7eqNiZmP3ZiJ9h2OfxU3kZTwJ9DrEuoPaCbm0h8ySMyw/exec"; 
+
+    async function submitData() {
+        const id = document.getElementById('student-id').value;
+        const name = document.getElementById('student-name').value;
+        const temp = document.getElementById('mood-temp').value;
+        const resolution = document.getElementById('resolution').value.trim();
+        const mood = document.querySelector('input[name="mood"]:checked').value;
+        const dailyPw = document.getElementById('daily-password').value.trim();
+        let action = document.querySelector('input[name="action"]:checked').value;
+
+        if (action === "기타") {
+            const customValue = document.getElementById('custom-action').value.trim();
+            if (!customValue) {
+                alert('기타 내용을 입력해주세요!');
+                return;
+            }
+            action = "기타: " + customValue;
+        }
+
+        if(!id || !name || !resolution || !dailyPw) {
+            alert('모든 정보를 입력해주세요!');
+            return;
+        }
+
+        if(resolution.length !== 5) {
+            alert('❌ 오늘의 다짐은 정확히 딱! 5글자여야 합니다.');
+            document.getElementById('resolution').focus();
+            return;
+        }
+
+        const submitBtn = document.getElementById('submit-btn');
+        const loadingText = document.getElementById('loading');
+        const pwInput = document.getElementById('daily-password');
+        const errorMsg = document.getElementById('pw-error');
+        
+        submitBtn.disabled = true;
+        loadingText.style.display = 'block';
+        hideError();
+
+        const payload = { 
+            id, name, temp, mood, resolution, action,
+            password: dailyPw 
+        };
+
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            
+            if(result.status === "success") {
+                startConfetti();
+                showSuccessModal(name);
+                
+                // 폼 초기화
+                document.getElementById('resolution').value = '';
+                document.getElementById('daily-password').value = '';
+                document.getElementById('custom-action').value = '';
+                document.getElementById('mood-temp').value = '50';
+                document.getElementById('temp-value').innerText = '50℃';
+                document.getElementById('mood-1').checked = true;
+                document.getElementById('act-1').checked = true;
+                toggleCustomAction(false);
+            } else if (result.status === "wrong_password") {
+                pwInput.classList.add('error-input');
+                errorMsg.style.display = 'block';
+                pwInput.focus();
+            } else {
+                alert('전송 실패: ' + result.message);
+            }
+        } catch (error) {
+            alert('전송 오류가 발생했습니다. 네트워크를 확인해주세요.');
+        } finally {
+            submitBtn.disabled = false;
+            loadingText.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
